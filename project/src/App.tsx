@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
 import Budget from './pages/Budget';
+
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
