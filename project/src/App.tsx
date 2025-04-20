@@ -12,6 +12,7 @@ import Categories from './pages/Categories';
 import Budget from './pages/Budget';
 
 import Profile from './pages/Profile';
+
 import NotFound from './pages/NotFound';
 
 // Components

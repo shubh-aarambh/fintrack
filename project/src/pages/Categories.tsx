@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Filter, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Filter } from 'lucide-react';
 import { useCategories } from '../context/CategoriesContext';
 import { useTransactions } from '../context/TransactionsContext';
 import { Category, TransactionType } from '../types';
@@ -7,23 +7,20 @@ import { Category, TransactionType } from '../types';
 const Categories: React.FC = () => {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
   const { getTransactionsByCategory } = useTransactions();
-  
+
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
-  
-  // Form state
+
   const [name, setName] = useState('');
   const [type, setType] = useState<TransactionType>('expense');
   const [color, setColor] = useState('#3366FF');
   const [icon, setIcon] = useState('');
-  
-  // Filter categories
-  const filteredCategories = categories.filter((category) => 
+
+  const filteredCategories = categories.filter((category) =>
     filterType === 'all' || category.type === filterType
   );
-  
-  // Reset form
+
   const resetForm = () => {
     setName('');
     setType('expense');
@@ -31,14 +28,12 @@ const Categories: React.FC = () => {
     setIcon('');
     setCategoryToEdit(null);
   };
-  
-  // Handle form open
+
   const handleAddCategory = () => {
     resetForm();
     setIsFormOpen(true);
   };
-  
-  // Handle edit
+
   const handleEdit = (category: Category) => {
     setCategoryToEdit(category);
     setName(category.name);
@@ -47,50 +42,30 @@ const Categories: React.FC = () => {
     setIcon(category.icon);
     setIsFormOpen(true);
   };
-  
-  // Handle delete
+
   const handleDelete = (categoryId: string) => {
     const transactions = getTransactionsByCategory(categoryId);
-    
     if (transactions.length > 0) {
-      alert(`This category has ${transactions.length} transactions. Delete them first or reassign them to another category.`);
+      alert(`This category has ${transactions.length} transactions. Delete them first or reassign.`);
       return;
     }
-    
+
     if (window.confirm('Are you sure you want to delete this category?')) {
       deleteCategory(categoryId);
     }
   };
-  
-  // Handle form submit
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name || !icon) {
-      return;
-    }
-    
-    if (categoryToEdit) {
-      updateCategory(categoryToEdit.id, {
-        name,
-        type,
-        color,
-        icon,
-      });
-    } else {
-      addCategory({
-        name,
-        type,
-        color,
-        icon,
-      });
-    }
-    
+    if (!name || !icon) return;
+
+    const payload = { name, type, color, icon };
+    categoryToEdit ? updateCategory(categoryToEdit.id, payload) : addCategory(payload);
+
     resetForm();
     setIsFormOpen(false);
   };
 
-  // Sample icons for the dropdown
   const iconOptions = [
     { value: 'home', label: 'Home' },
     { value: 'shopping-cart', label: 'Shopping' },
@@ -108,84 +83,104 @@ const Categories: React.FC = () => {
     { value: 'globe', label: 'Travel' },
   ];
 
+  const INRbtn = {
+    padding: '10px 16px',
+    backgroundColor: '#2563EB',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    fontWeight: 500,
+  };
+
+  const INRcontainer = {
+    padding: '1.5rem',
+    border: '1px solid #e5e7eb',
+    borderRadius: '12px',
+    backgroundColor: '#fff',
+    marginBottom: '2rem',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+  };
+
+  const INRinput = {
+    padding: '10px',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    width: '100%',
+  };
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Categories</h1>
-        
-        <div className="flex space-x-3">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Filter size={16} className="text-gray-400" />
-            </div>
+    <div style={{ padding: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 600 }}>Categories</h1>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ position: 'relative' }}>
+            <Filter size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value as TransactionType | 'all')}
-              className="input pl-9 pr-8 py-2"
+              style={{
+                ...INRinput,
+                paddingLeft: '32px',
+              }}
             >
               <option value="all">All Types</option>
               <option value="income">Income</option>
               <option value="expense">Expense</option>
             </select>
           </div>
-          
-          <button
-            onClick={handleAddCategory}
-            className="btn btn-primary"
-          >
-            <Plus size={18} className="mr-1" />
+
+          <button style={INRbtn} onClick={handleAddCategory}>
+            <Plus size={18} style={{ marginRight: '6px' }} />
             Add Category
           </button>
         </div>
       </div>
-      
-      {/* Categories grid */}
+
       {filteredCategories.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
           {filteredCategories.map((category) => (
-            <div 
-              key={category.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center">
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center mr-3"
-                    style={{ 
+            <div key={category.id} style={INRcontainer}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginRight: '12px',
                       backgroundColor: `${category.color}20`,
-                      color: category.color
+                      color: category.color,
+                      fontSize: '18px',
                     }}
                   >
-                    <span className="text-lg">{category.icon}</span>
+                    {category.icon}
                   </div>
-                  
                   <div>
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">
-                      {category.name}
-                    </h3>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      <span className={`capitalize ${
-                        category.type === 'income' ? 'text-secondary' : 'text-error'
-                      }`}>
-                        {category.type}
-                      </span>
-                    </div>
+                    <h3 style={{ fontWeight: 500 }}>{category.name}</h3>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: category.type === 'income' ? '#059669' : '#dc2626',
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {category.type}
+                    </span>
                   </div>
                 </div>
-                
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => handleEdit(category)}
-                    className="p-1 text-gray-500 hover:text-primary transition-colors"
-                    aria-label="Edit category"
-                  >
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => handleEdit(category)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4B5563' }}>
                     <Edit size={16} />
                   </button>
-                  <button
-                    onClick={() => handleDelete(category.id)}
-                    className="p-1 text-gray-500 hover:text-error transition-colors"
-                    aria-label="Delete category"
-                  >
+                  <button onClick={() => handleDelete(category.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}>
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -194,155 +189,113 @@ const Categories: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
-            {filterType !== 'all'
-              ? `No ${filterType} categories found`
-              : 'No categories yet'}
+        <div style={{ textAlign: 'center', ...INRcontainer }}>
+          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+            {filterType !== 'all' ? `No ${filterType} categories found` : 'No categories yet'}
           </p>
-          <button
-            onClick={handleAddCategory}
-            className="btn btn-primary"
-          >
-            <Plus size={18} className="mr-1" />
+          <button style={INRbtn} onClick={handleAddCategory}>
+            <Plus size={18} style={{ marginRight: '6px' }} />
             Add your first category
           </button>
         </div>
       )}
-      
-      {/* Category Form Modal */}
+
+      {/* Modal */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md animate-slide-up"
-          >
-            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                {categoryToEdit ? 'Edit Category' : 'Add Category'}
-              </h2>
-              <button
-                onClick={() => {
-                  setIsFormOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                <span className="sr-only">Close</span>
-                <Trash2 size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="p-4">
-              <div className="space-y-4">
-                {/* Category Type */}
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            width: '100%',
+            maxWidth: '500px',
+          }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem' }}>
+              {categoryToEdit ? 'Edit Category' : 'Add Category'}
+            </h2>
+
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Category Type
-                  </label>
-                  <div className="flex space-x-2">
-                    <button
-                      type="button"
-                      className={`flex-1 py-2 px-3 rounded-md border ${
-                        type === 'income'
-                          ? 'bg-secondary text-white border-secondary'
-                          : 'bg-white text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
-                      }`}
+                  <label>Category Type</label><br />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                    <button type="button"
                       onClick={() => setType('income')}
-                    >
-                      Income
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex-1 py-2 px-3 rounded-md border ${
-                        type === 'expense'
-                          ? 'bg-error text-white border-error'
-                          : 'bg-white text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
-                      }`}
+                      style={{
+                        ...INRbtn,
+                        backgroundColor: type === 'income' ? '#059669' : '#f3f4f6',
+                        color: type === 'income' ? '#fff' : '#374151'
+                      }}
+                    >Income</button>
+                    <button type="button"
                       onClick={() => setType('expense')}
-                    >
-                      Expense
-                    </button>
+                      style={{
+                        ...INRbtn,
+                        backgroundColor: type === 'expense' ? '#dc2626' : '#f3f4f6',
+                        color: type === 'expense' ? '#fff' : '#374151'
+                      }}
+                    >Expense</button>
                   </div>
                 </div>
-                
-                {/* Name */}
+
                 <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Name
-                  </label>
+                  <label>Name</label>
                   <input
+                    style={INRinput}
                     type="text"
-                    id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="input w-full"
                     placeholder="Category name"
                     required
                   />
                 </div>
-                
-                {/* Icon */}
+
                 <div>
-                  <label
-                    htmlFor="icon"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Icon
-                  </label>
+                  <label>Icon</label>
                   <select
-                    id="icon"
+                    style={INRinput}
                     value={icon}
                     onChange={(e) => setIcon(e.target.value)}
-                    className="input w-full"
                     required
                   >
                     <option value="">Select an icon</option>
-                    {iconOptions.map((option) => (
+                    {iconOptions.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
                     ))}
                   </select>
                 </div>
-                
-                {/* Color */}
+
                 <div>
-                  <label
-                    htmlFor="color"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Color
-                  </label>
+                  <label>Color</label><br />
                   <input
                     type="color"
-                    id="color"
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
-                    className="h-10 w-full rounded-md border border-gray-300 p-1 dark:border-gray-700"
+                    style={{
+                      width: '100%',
+                      height: '40px',
+                      borderRadius: '6px',
+                      border: '1px solid #ccc',
+                    }}
                   />
                 </div>
-              </div>
-              
-              <div className="mt-6 flex space-x-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFormOpen(false);
-                    resetForm();
-                  }}
-                  className="flex-1 btn btn-outline"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 btn btn-primary"
-                >
-                  {categoryToEdit ? 'Update' : 'Add'} Category
-                </button>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button type="button" onClick={() => { setIsFormOpen(false); resetForm(); }} style={{ ...INRbtn, backgroundColor: '#f3f4f6', color: '#374151' }}>Cancel</button>
+                  <button type="submit" style={INRbtn}>
+                    {categoryToEdit ? 'Update' : 'Add'} Category
+                  </button>
+                </div>
               </div>
             </form>
           </div>

@@ -17,12 +17,14 @@ const Budget: React.FC = () => {
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
   
   // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
+      maximumFractionDigits: 2,
     }).format(amount);
   };
+  
   
   // Calculate budget progress
   const calculateProgress = (budget: BudgetType) => {
